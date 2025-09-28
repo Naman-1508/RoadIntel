@@ -31,12 +31,12 @@ export const Header = () => {
 
           {/* Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
-            <a href="#" className="text-foreground hover:text-primary transition-colors font-medium">
+            <Link to="/" className="text-foreground hover:text-primary transition-colors font-medium">
               Dashboard
-            </a>
-            <a href="#" className="text-muted-foreground hover:text-primary transition-colors font-medium">
+            </Link>
+            <Link to="/reports" className="text-muted-foreground hover:text-primary transition-colors font-medium">
               Reports
-            </a>
+            </Link>
             <a href="#" className="text-muted-foreground hover:text-primary transition-colors font-medium">
               Analytics
             </a>
