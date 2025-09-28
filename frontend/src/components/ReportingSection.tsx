@@ -2,8 +2,14 @@ import { AlertTriangle, Car, Construction, MapPin, Plus } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AccidentReportForm } from "./AccidentReportForm";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 export const ReportingSection = () => {
+  const [isAccidentDialogOpen, setIsAccidentDialogOpen] = useState(false);
+  const { toast } = useToast();
   const reportTypes = [
     {
       id: "accident",
@@ -39,6 +45,27 @@ export const ReportingSection = () => {
     }
   ];
 
+  const handleReportClick = (reportType: string) => {
+    if (reportType === "accident") {
+      setIsAccidentDialogOpen(true);
+    } else {
+      // Handle other report types
+      toast({
+        title: "Coming Soon",
+        description: `${reportType} reporting will be available soon!`,
+      });
+    }
+  };
+
+  const handleAccidentSubmit = (data: any) => {
+    console.log("Accident report submitted:", data);
+    toast({
+      title: "Report Submitted",
+      description: "Your accident report has been submitted successfully.",
+    });
+    setIsAccidentDialogOpen(false);
+  };
+
   const getColorClasses = (color: string) => {
     switch (color) {
       case "danger":
@@ -71,6 +98,7 @@ export const ReportingSection = () => {
               className={`cursor-pointer transition-all duration-200 hover:shadow-custom-lg hover:-translate-y-1 ${getColorClasses(
                 report.color
               )}`}
+              onClick={() => handleReportClick(report.id)}
             >
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
@@ -95,7 +123,15 @@ export const ReportingSection = () => {
               <CardContent>
                 <p className="text-sm text-muted-foreground">{report.description}</p>
                 <div className="mt-3">
-                  <Button variant="ghost" size="sm" className="w-full justify-start p-0 h-auto font-medium">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="w-full justify-start p-0 h-auto font-medium"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleReportClick(report.id);
+                    }}
+                  >
                     Report {report.title} →
                   </Button>
                 </div>
@@ -104,6 +140,18 @@ export const ReportingSection = () => {
           );
         })}
       </div>
+
+      <Dialog open={isAccidentDialogOpen} onOpenChange={setIsAccidentDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Report Traffic Accident</DialogTitle>
+          </DialogHeader>
+          <AccidentReportForm 
+            onSubmit={handleAccidentSubmit}
+            onCancel={() => setIsAccidentDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
