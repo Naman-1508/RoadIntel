@@ -37,10 +37,10 @@ export const Header = () => {
             <Link to="/reports" className="text-muted-foreground hover:text-primary transition-colors font-medium">
               Reports
             </Link>
-            <a href="#" className="text-muted-foreground hover:text-primary transition-colors font-medium">
+            <a href="/analytics" className="text-muted-foreground hover:text-primary transition-colors font-medium">
               Analytics
             </a>
-            <a href="#" className="text-muted-foreground hover:text-primary transition-colors font-medium">
+            <a href="alerts" className="text-muted-foreground hover:text-primary transition-colors font-medium">
               Alerts
             </a>
           </nav>
@@ -60,6 +60,7 @@ export const Header = () => {
               <Button size="sm" asChild className="bg-gradient-primary hover:opacity-90">
                 <Link to="/register">Register</Link>
               </Button>
+
             </div>
             
             <Button variant="ghost" size="sm" className="md:hidden">
