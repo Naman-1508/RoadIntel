@@ -2,14 +2,13 @@
 import { ArrowLeft, TrendingUp, Users, AlertTriangle, Car } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
 import { MetricCard } from "@/components/MetricCard";
 import { TrafficChart } from "@/components/TrafficChart";
 import { IncidentHeatmap } from "@/components/IncidentHeatmap";
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
 
 const AnalyticsDashboard = () => {
-  const navigate = useNavigate();
-
   const trafficMetrics = [
     {
       title: "Active Incidents",
@@ -47,33 +46,16 @@ const AnalyticsDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-card border-b border-border sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate("/")}
-                className="flex items-center space-x-2"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                <span>Back to Dashboard</span>
-              </Button>
-              <div className="h-6 w-px bg-border" />
-              <div>
-                <h1 className="text-xl font-semibold text-foreground">
-                  Analytics Dashboard
-                </h1>
-                <p className="text-sm text-muted-foreground">
-                  Real-time traffic and incident analytics
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header />
+      {/* Page Heading */}
+<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+  <h1 className="text-2xl font-semibold text-foreground flex items-center space-x-2">
+    <span>Ananlytics Dashboard</span>
+  </h1>
+  <p className="text-sm text-muted-foreground mt-1">
+    Real-time traffic and incident analytics
+  </p>
+</div>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -142,6 +124,7 @@ const AnalyticsDashboard = () => {
           </CardContent>
         </Card>
       </main>
+      <Footer />
     </div>
   );
 };

@@ -3,12 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { useNavigate } from "react-router-dom";
 import { AlertCard } from "@/components/AlertCard";
 import { useState } from "react";
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
 
 const AlertDashboard = () => {
-  const navigate = useNavigate();
+
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState("all");
 
@@ -22,6 +23,10 @@ const AlertDashboard = () => {
       status: "active" as const,
       timestamp: "2 minutes ago",
       reporter: "Traffic Control Center",
+      upvotes: 24,
+      downvotes: 2,
+      comments: 8,
+      hasPhotos: true,
     },
     {
       id: "2", 
@@ -32,6 +37,10 @@ const AlertDashboard = () => {
       status: "pending" as const,
       timestamp: "15 minutes ago",
       reporter: "City Works Department",
+      upvotes: 15,
+      downvotes: 1,
+      comments: 3,
+      hasPhotos: false,
     },
     {
       id: "3",
@@ -42,6 +51,10 @@ const AlertDashboard = () => {
       status: "active" as const,
       timestamp: "1 hour ago",
       reporter: "Weather Service",
+      upvotes: 31,
+      downvotes: 3,
+      comments: 15,
+      hasPhotos: true,
     },
     {
       id: "4",
@@ -52,6 +65,10 @@ const AlertDashboard = () => {
       status: "resolved" as const,
       timestamp: "3 hours ago",
       reporter: "Automated System",
+      upvotes: 42,
+      downvotes: 0,
+      comments: 12,
+      hasPhotos: true,
     },
   ];
 
@@ -71,33 +88,17 @@ const AlertDashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-card border-b border-border sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate("/")}
-                className="flex items-center space-x-2"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                <span>Back to Dashboard</span>
-              </Button>
-              <div className="h-6 w-px bg-border" />
-              <div>
-                <h1 className="text-xl font-semibold text-foreground flex items-center space-x-2">
-                  <Bell className="h-5 w-5" />
-                  <span>Alert Dashboard</span>
-                </h1>
-                <p className="text-sm text-muted-foreground">
-                  Monitor and manage traffic alerts
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+        <Header />     
+      {/* Page Heading */}
+<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+  <h1 className="text-2xl font-semibold text-foreground flex items-center space-x-2">
+    <Bell className="h-6 w-6" />
+    <span>Alert Dashboard</span>
+  </h1>
+  <p className="text-sm text-muted-foreground mt-1">
+    Monitor and manage traffic alerts
+  </p>
+</div>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -174,6 +175,8 @@ const AlertDashboard = () => {
           )}
         </div>
       </main>
+
+      <Footer />
     </div>
   );
 };

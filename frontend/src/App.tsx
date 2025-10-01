@@ -10,6 +10,7 @@ import Reports from "./pages/Reports";
 import NotFound from "./pages/NotFound";
 import AlertDashboard from "./pages/AlertDashboard";
 import AnalyticsDashboard from "./pages/AnalyticsDashboard";
+import SocialInsights from "./pages/SocialInsights";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/reports" element={<Reports />} />
           <Route path="/alerts" element={<AlertDashboard />} />
           <Route path="/analytics" element={<AnalyticsDashboard />} />
+          <Route path="/social-insights" element={<SocialInsights />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

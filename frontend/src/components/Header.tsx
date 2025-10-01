@@ -30,20 +30,28 @@ export const Header = () => {
           </div>
 
           {/* Navigation */}
-          <nav className="hidden md:flex items-center space-x-6">
-            <Link to="/" className="text-foreground hover:text-primary transition-colors font-medium">
-              Dashboard
-            </Link>
-            <Link to="/reports" className="text-muted-foreground hover:text-primary transition-colors font-medium">
-              Reports
-            </Link>
-            <a href="/analytics" className="text-muted-foreground hover:text-primary transition-colors font-medium">
-              Analytics
-            </a>
-            <a href="alerts" className="text-muted-foreground hover:text-primary transition-colors font-medium">
-              Alerts
-            </a>
-          </nav>
+<nav className="hidden md:flex items-center space-x-6">
+  <Link to="/" className="text-foreground hover:text-primary transition-colors font-medium">
+    Dashboard
+  </Link>
+  <Link to="/reports" className="text-muted-foreground hover:text-primary transition-colors font-medium">
+    Reports
+  </Link>
+  <Link to="/analytics" className="text-muted-foreground hover:text-primary transition-colors font-medium">
+    Analytics
+  </Link>
+  <Link to="/alerts" className="text-muted-foreground hover:text-primary transition-colors font-medium">
+    Alerts
+  </Link>
+  {/* New Social Insights Button */}
+  <Link
+    to="/social-insights"
+    className="text-muted-foreground hover:text-primary transition-colors font-medium"
+  >
+    Social Insights
+  </Link>
+</nav>
+
 
           {/* Actions */}
           <div className="flex items-center space-x-3">

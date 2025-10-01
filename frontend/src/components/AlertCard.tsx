@@ -1,8 +1,9 @@
-import { MapPin, Clock, User, AlertCircle, CheckCircle, AlertTriangle } from "lucide-react";
+import { MapPin, Clock, User, AlertCircle, CheckCircle, AlertTriangle, ThumbsUp, ThumbsDown, MessageCircle, Camera } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 interface Alert {
   id: string;
@@ -13,6 +14,10 @@ interface Alert {
   status: "active" | "pending" | "resolved";
   timestamp: string;
   reporter: string;
+  upvotes?: number;
+  downvotes?: number;
+  comments?: number;
+  hasPhotos?: boolean;
 }
 
 interface AlertCardProps {
@@ -20,6 +25,32 @@ interface AlertCardProps {
 }
 
 export const AlertCard = ({ alert }: AlertCardProps) => {
+  const [upvotes, setUpvotes] = useState(alert.upvotes || 0);
+  const [downvotes, setDownvotes] = useState(alert.downvotes || 0);
+  const [userVote, setUserVote] = useState<'up' | 'down' | null>(null);
+
+  const handleUpvote = () => {
+    if (userVote === 'up') {
+      setUpvotes(upvotes - 1);
+      setUserVote(null);
+    } else {
+      setUpvotes(upvotes + 1);
+      if (userVote === 'down') setDownvotes(downvotes - 1);
+      setUserVote('up');
+    }
+  };
+
+  const handleDownvote = () => {
+    if (userVote === 'down') {
+      setDownvotes(downvotes - 1);
+      setUserVote(null);
+    } else {
+      setDownvotes(downvotes + 1);
+      if (userVote === 'up') setUpvotes(upvotes - 1);
+      setUserVote('down');
+    }
+  };
+
   const getSeverityConfig = (severity: string) => {
     switch (severity) {
       case "high":
@@ -86,14 +117,52 @@ export const AlertCard = ({ alert }: AlertCardProps) => {
           </div>
         </div>
         
-        <div className="flex items-center justify-between">
-          <Badge 
-            variant="outline" 
-            className={cn("text-xs", `text-${severityConfig.color} border-${severityConfig.color}/30`)}
-          >
-            {alert.severity.toUpperCase()} PRIORITY
-          </Badge>
-          
+        {/* Community Engagement Section */}
+        <div className="flex items-center justify-between pt-3 border-t border-border mt-3">
+          <div className="flex items-center space-x-4">
+            {/* Voting */}
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "h-8 px-2 gap-1",
+                  userVote === 'up' && "text-success bg-success-light"
+                )}
+                onClick={handleUpvote}
+              >
+                <ThumbsUp className="h-4 w-4" />
+                <span className="text-xs font-medium">{upvotes}</span>
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "h-8 px-2 gap-1",
+                  userVote === 'down' && "text-danger bg-danger-light"
+                )}
+                onClick={handleDownvote}
+              >
+                <ThumbsDown className="h-4 w-4" />
+                <span className="text-xs font-medium">{downvotes}</span>
+              </Button>
+            </div>
+
+            {/* Comments */}
+            <Button variant="ghost" size="sm" className="h-8 px-2 gap-1">
+              <MessageCircle className="h-4 w-4" />
+              <span className="text-xs font-medium">{alert.comments || 0}</span>
+            </Button>
+
+            {/* Photo indicator */}
+            {alert.hasPhotos && (
+              <Badge variant="outline" className="text-xs gap-1">
+                <Camera className="h-3 w-3" />
+                Photos
+              </Badge>
+            )}
+          </div>
+
           <div className="flex space-x-2">
             {alert.status === "active" && (
               <>
