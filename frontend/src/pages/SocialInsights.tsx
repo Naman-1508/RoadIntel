@@ -52,7 +52,7 @@ const SocialInsights = () => {
       </main>
 
       {/* Footer */}
-      <Footer />
+     
     </div>
   );
 };

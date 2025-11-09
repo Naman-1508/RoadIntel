@@ -138,7 +138,7 @@ const AlertDashboard = () => {
         </div>
       </main>
 
-      <Footer />
+      
     </div>
   );
 };

@@ -16,6 +16,7 @@ import UserDashboard from "./pages/UserDashboard";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import Profile from "./pages/Profile";
 import { setTokenGetter } from "./utility/api";
+import { Footer } from "@/components/Footer";
 
 const queryClient = new QueryClient();
 
@@ -78,6 +79,7 @@ const AppContent = () => (
             {/* 404 - must be last */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <Footer/>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

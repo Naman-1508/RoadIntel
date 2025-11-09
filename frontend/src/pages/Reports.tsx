@@ -31,7 +31,7 @@ const Reports = () => {
         </div>
       </main>
 
-      <Footer />
+    
     </div>
   );
 };

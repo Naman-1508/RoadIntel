@@ -1,4 +1,5 @@
 import { Facebook, Twitter, Instagram, Mail, Phone } from "lucide-react";
+import { Link } from "react-router-dom"; // ✅ import Link
 
 export const Footer = () => {
   return (
@@ -34,24 +35,24 @@ export const Footer = () => {
             <h4 className="font-semibold text-foreground mb-4">Features</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <a href="reports" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/reports" className="text-muted-foreground hover:text-primary transition-colors">
                   Reports
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="analytics" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/analytics" className="text-muted-foreground hover:text-primary transition-colors">
                   Analytics
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="alerts" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/alerts" className="text-muted-foreground hover:text-primary transition-colors">
                   Alerts
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="social-insights" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/social-insights" className="text-muted-foreground hover:text-primary transition-colors">
                   Social Insights
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -61,24 +62,24 @@ export const Footer = () => {
             <h4 className="font-semibold text-foreground mb-4">Support</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/help" className="text-muted-foreground hover:text-primary transition-colors">
                   Help Center
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/contact" className="text-muted-foreground hover:text-primary transition-colors">
                   Contact Us
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/privacy-policy" className="text-muted-foreground hover:text-primary transition-colors">
                   Privacy Policy
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/terms" className="text-muted-foreground hover:text-primary transition-colors">
                   Terms of Service
-                </a>
+                </Link>
               </li>
             </ul>
           </div>

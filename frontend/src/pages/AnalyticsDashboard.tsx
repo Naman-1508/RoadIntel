@@ -124,7 +124,7 @@ const AnalyticsDashboard = () => {
           </CardContent>
         </Card>
       </main>
-      <Footer />
+     
     </div>
   );
 };
