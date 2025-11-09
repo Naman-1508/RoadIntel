@@ -1,11 +1,10 @@
 import express from "express";
 import { getAccidents,addAccident } from "../controllers/accident.controllers.js";
-import { verifyToken } from "../middleware/auth.middleware.js";
-import { get } from "mongoose";
+import { verifyClerkAuth } from "../middleware/clerk.middleware.js";
 
 const router = express.Router();
 
-router.post("/",verifyToken,addAccident);
-router.get("/",verifyToken,getAccidents);
+router.post("/", verifyClerkAuth, addAccident);
+router.get("/", verifyClerkAuth, getAccidents);
 
 export default router;

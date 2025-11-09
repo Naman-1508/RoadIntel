@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { AlertTriangle, MapPin, Clock } from "lucide-react";
+import API from "@/utility/api";
 
 export const LiveUpdates = () => {
   const [reports, setReports] = useState<any[]>([]);
@@ -10,8 +11,8 @@ export const LiveUpdates = () => {
   useEffect(() => {
     const fetchReports = async () => {
       try {
-        const res = await fetch("http://localhost:3000/api/reports");
-        let data: any[] = await res.json();
+        const res = await API.get("/reports");
+        let data= res.data;
 
         // Filter active reports based on ACTIVE_MINUTES
         const now = new Date().getTime();

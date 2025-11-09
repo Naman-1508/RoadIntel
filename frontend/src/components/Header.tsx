@@ -6,7 +6,9 @@ import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { translateText } from "@/services/translateServices";
 import { Navigation } from "@/components/Navigation";
+import { UserButton, SignInButton, useAuth } from "@clerk/clerk-react";
 export const Header : React.FC = () => {
+  const { isSignedIn } = useAuth();
   const [langOpen, setLangOpen] = useState(false);
   const [language, setLanguage] = useState("EN");
   const [navOpen, setNavOpen] = useState(false);
@@ -145,13 +147,18 @@ setNavLabels({
             
             {/* Auth Buttons */}
             <div className="hidden sm:flex items-center space-x-2">
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/login">Sign In</Link>
-              </Button>
-              <Button size="sm" asChild className=" hover:opacity-90">
-                <Link to="/register">Register</Link>
-              </Button>
-
+              {isSignedIn ? (
+                <UserButton afterSignOutUrl="/" />
+              ) : (
+                <>
+                  <SignInButton mode="modal">
+                    <Button variant="ghost" size="sm">Sign In</Button>
+                  </SignInButton>
+                  <SignInButton mode="modal">
+                    <Button size="sm" className="hover:opacity-90">Register</Button>
+                  </SignInButton>
+                </>
+              )}
             </div>
             
             <Button variant="ghost" size="sm" className="md:hidden">

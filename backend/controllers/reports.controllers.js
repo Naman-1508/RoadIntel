@@ -2,7 +2,10 @@ import { AccidentReport, TrafficReport, ConstructionReport, RoadHazardReport } f
 
 export const createAccidentReport = async (req, res) => {
   try {
-    const report = await AccidentReport.create(req.body);
+    const report = await AccidentReport.create({
+      ...req.body,
+      reportedBy: req.user.id
+    });
     res.status(201).json({ success: true, report });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -11,7 +14,10 @@ export const createAccidentReport = async (req, res) => {
 
 export const createTrafficReport = async (req, res) => {
   try {
-    const report = await TrafficReport.create(req.body);
+    const report = await TrafficReport.create({
+      ...req.body,
+      reportedBy: req.user.id
+    });
     res.status(201).json({ success: true, report });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -20,7 +26,10 @@ export const createTrafficReport = async (req, res) => {
 
 export const createConstructionReport = async (req, res) => {
   try {
-    const report = await ConstructionReport.create(req.body);
+    const report = await ConstructionReport.create({
+      ...req.body,
+      reportedBy: req.user.id
+    });
     res.status(201).json({ success: true, report });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -29,7 +38,10 @@ export const createConstructionReport = async (req, res) => {
 
 export const createRoadHazardReport = async (req, res) => {
   try {
-    const report = await RoadHazardReport.create(req.body);
+    const report = await RoadHazardReport.create({
+      ...req.body,
+      reportedBy: req.user.id
+    });
     res.status(201).json({ success: true, report });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

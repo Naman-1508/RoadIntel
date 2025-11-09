@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { AlertCard } from "@/components/AlertCard";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import API from "@/utility/api";
 
 const AlertDashboard = () => {
   const [alerts, setAlerts] = useState<any[]>([]);
@@ -17,7 +18,7 @@ const AlertDashboard = () => {
   // Fetch reports from backend
   const fetchReports = async () => {
     try {
-      const res = await axios.get("http://localhost:3000/api/reports");
+      const res = await API.get("/reports");
       setAlerts(res.data);
     } catch (error) {
       console.error("Error fetching reports:", error);
