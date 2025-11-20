@@ -1,9 +1,11 @@
-import mongoose from "mongoose";
 import dotenv from "dotenv";
-import { User } from "../models/users.models.js";
-import { getClerkUser } from "../lib/clerk.js";
-
 dotenv.config();
+import mongoose from "mongoose";
+import { User } from "../models/users.models.js";
+const { getClerkUser } = await import("../lib/clerk.js");
+
+
+
 
 /**
  * Seed admin user from Clerk

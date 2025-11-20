@@ -1,53 +1,53 @@
 import mongoose from "mongoose";
 
-const userSchema = new mongoose.Schema({
+const userSchema = new mongoose.Schema(
+  {
     clerkId: {
-        type: String,
-        required: true,
-        unique: true,
-        index: true
+      type: String,
+      required: true,
+      unique: true, // ✅ unique already creates an index — no need for index:true
     },
     username: {
-        type: String,
-        trim: true,
-        maxlength: 50
+      type: String,
+      trim: true,
+      maxlength: 50,
     },
     email: {
-        type: String,
-        required: true,
-        unique: true,
-        lowercase: true,
-        trim: true,
-        match: [/^\S+@\S+\.\S+$/, "Please provide a valid email"]
+      type: String,
+      required: true,
+      unique: true, // ✅ unique ensures index creation
+      lowercase: true,
+      trim: true,
+      match: [/^\S+@\S+\.\S+$/, "Please provide a valid email"],
     },
     firstName: {
-        type: String,
-        trim: true
+      type: String,
+      trim: true,
     },
     lastName: {
-        type: String,
-        trim: true
+      type: String,
+      trim: true,
     },
     imageUrl: {
-        type: String
+      type: String,
     },
     role: {
-        type: String,
-        enum: ["user", "admin"],
-        default: "user"
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
     },
     isActive: {
-        type: Boolean,
-        default: true
+      type: Boolean,
+      default: true,
     },
     lastLogin: {
-        type: Date
-    }
-}, { timestamps: true });
+      type: Date,
+    },
+  },
+  { timestamps: true }
+);
 
-// Index for faster queries
-userSchema.index({ email: 1 });
-userSchema.index({ role: 1 });
-userSchema.index({ clerkId: 1 });
+// ✅ Keep only non-duplicate indexes
+userSchema.index({ role: 1 }); // this is fine — helps queries by role
 
 export const User = mongoose.model("User", userSchema);

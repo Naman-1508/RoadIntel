@@ -104,7 +104,6 @@ const UserDashboard = () => {
         </div>
       </main>
 
-      <Footer />
     </div>
   );
 };

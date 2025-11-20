@@ -10,6 +10,12 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { AlertTriangle, MapPin, Clock, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+import { useAuth } from "@clerk/clerk-react";
+import API, { setTokenGetter } from "@/utility/api";
+
+// ---------------------
+// Validation Schema
+// ---------------------
 const accidentReportSchema = z.object({
   location: z.string().min(1, "Location is required").max(200, "Location must be less than 200 characters"),
   description: z.string().min(10, "Description must be at least 10 characters").max(500, "Description must be less than 500 characters"),
@@ -26,7 +32,7 @@ const accidentReportSchema = z.object({
 type AccidentReportFormValues = z.infer<typeof accidentReportSchema>;
 
 interface AccidentReportFormProps {
-  onSubmit: (data: AccidentReportFormValues) => void;
+  onSubmit: (data: AccidentReportFormValues) => void; 
   onCancel: () => void;
 }
 
@@ -44,40 +50,40 @@ export const AccidentReportForm = ({ onSubmit, onCancel }: AccidentReportFormPro
   });
 
   const { toast } = useToast();
+  const { getToken } = useAuth();
 
-const handleSubmit = async (data: AccidentReportFormValues) => {
-  try {
-    const response = await fetch("http://localhost:3000/api/reports/accident", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
+  // Connect Clerk token to Axios interceptor
+  setTokenGetter(() => getToken());
 
-    const result = await response.json();
+  // ---------------------
+  // FIXED Submit Handler
+  // ---------------------
+  const handleSubmit = async (data: AccidentReportFormValues) => {
+    try {
+      const response = await API.post("/reports/accident", data);
 
-    if (result.success) {
+      if (response.data.success) {
+        toast({
+          title: "Report Submitted ✅",
+          description: "Your accident report has been successfully submitted.",
+        });
+        form.reset();
+        onSubmit(data); // keep your original callback if needed
+      } else {
+        toast({
+          title: "Submission Failed ❌",
+          description: "Something went wrong. Try again later.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
       toast({
-        title: "Report Submitted ✅",
-        description: "Your accident report has been successfully sent.",
-      });
-      form.reset();
-    } else {
-      toast({
-        title: "Submission Failed ❌",
-        description: "Something went wrong. Try again later.",
+        title: "Server Error 😔",
+        description: "Unable to reach the server.",
         variant: "destructive",
       });
     }
-  } catch (error) {
-    toast({
-      title: "Server Error 😔",
-      description: "Unable to reach the server.",
-      variant: "destructive",
-    });
-  }
-};
-
-
+  };
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
@@ -90,6 +96,8 @@ const handleSubmit = async (data: AccidentReportFormValues) => {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+            
+            {/* ROW 1 */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -126,6 +134,7 @@ const handleSubmit = async (data: AccidentReportFormValues) => {
               />
             </div>
 
+            {/* ROW 2 */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <FormField
                 control={form.control}
@@ -191,6 +200,7 @@ const handleSubmit = async (data: AccidentReportFormValues) => {
               />
             </div>
 
+            {/* DESCRIPTION */}
             <FormField
               control={form.control}
               name="description"
@@ -199,7 +209,7 @@ const handleSubmit = async (data: AccidentReportFormValues) => {
                   <FormLabel>Description</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Provide detailed description of the accident, road conditions, weather, and any other relevant information..."
+                      placeholder="Provide detailed description of the accident, road conditions, weather, etc..."
                       className="min-h-[120px]"
                       {...field}
                     />
@@ -209,6 +219,7 @@ const handleSubmit = async (data: AccidentReportFormValues) => {
               )}
             />
 
+            {/* BUTTONS */}
             <div className="flex gap-3 pt-4">
               <Button type="submit" className="flex-1 gradient-primary">
                 Submit Report
@@ -217,6 +228,7 @@ const handleSubmit = async (data: AccidentReportFormValues) => {
                 Cancel
               </Button>
             </div>
+
           </form>
         </Form>
       </CardContent>

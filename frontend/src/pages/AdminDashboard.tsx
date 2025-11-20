@@ -17,6 +17,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import API from "@/utility/api";
 import { useToast } from "@/hooks/use-toast";
+import { useClerk } from "@clerk/clerk-react";
 
 interface DashboardStats {
   users: {
@@ -67,6 +68,7 @@ interface Report {
 
 const AdminDashboard = () => {
   const { toast } = useToast();
+  const { signOut } = useClerk(); 
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [accidents, setAccidents] = useState<Accident[]>([]);
@@ -213,17 +215,25 @@ const AdminDashboard = () => {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Shield className="h-8 w-8" />
-            Admin Dashboard
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Manage users, accidents, and reports
-          </p>
-        </div>
-      </div>
+    <div className="flex items-center justify-between">
+  <div>
+    <h1 className="text-3xl font-bold flex items-center gap-2">
+      <Shield className="h-8 w-8" />
+      Admin Dashboard
+    </h1>
+    <p className="text-muted-foreground mt-2">
+      Manage users, accidents, and reports
+    </p>
+  </div>
+
+  <Button
+    variant="outline"
+    onClick={() => signOut({ redirectUrl: "/" })}
+  >
+    Logout
+  </Button>
+</div>
+
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList>

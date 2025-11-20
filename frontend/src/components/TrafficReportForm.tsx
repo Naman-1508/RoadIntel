@@ -9,6 +9,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Car, MapPin, Clock, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@clerk/clerk-react";
+import API, { setTokenGetter } from "@/utility/api";
 
 const trafficReportSchema = z.object({
   location: z.string().min(1, "Location is required").max(200, "Location must be less than 200 characters"),
@@ -46,36 +48,32 @@ export const TrafficReportForm = ({ onSubmit, onCancel }: TrafficReportFormProps
   const { toast } = useToast();
 
 const handleSubmit = async (data: TrafficReportFormValues) => {
-  try {
-    const response = await fetch("http://localhost:3000/api/reports/traffic", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
+    try {
+      const response = await API.post("/reports/accident", data);
 
-    const result = await response.json();
-
-    if (result.success) {
+      if (response.data.success) {
+        toast({
+          title: "Report Submitted ✅",
+          description: "Your Traffic report has been successfully submitted.",
+        });
+        form.reset();
+        onSubmit(data); // keep your original callback if needed
+      } else {
+        toast({
+          title: "Submission Failed ❌",
+          description: "Something went wrong. Try again later.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
       toast({
-        title: "Report Submitted ✅",
-        description: "Your accident report has been successfully sent.",
-      });
-      form.reset();
-    } else {
-      toast({
-        title: "Submission Failed ❌",
-        description: "Something went wrong. Try again later.",
+        title: "Server Error 😔",
+        description: "Unable to reach the server.",
         variant: "destructive",
       });
     }
-  } catch (error) {
-    toast({
-      title: "Server Error 😔",
-      description: "Unable to reach the server.",
-      variant: "destructive",
-    });
-  }
-};
+  };
+
 
 
 

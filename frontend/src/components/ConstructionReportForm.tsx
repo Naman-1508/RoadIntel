@@ -22,6 +22,9 @@ import {
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Construction, MapPin, Clock, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@clerk/clerk-react";
+import API, { setTokenGetter } from "@/utility/api"
+import { fromTheme } from "tailwind-merge";
 
 const constructionReportSchema = z.object({
   location: z
@@ -67,37 +70,32 @@ export const ConstructionReportForm = ({
 
 const { toast } = useToast();
 
-const handleSubmit = async (data: ConstructionReportFormValues) => {
-  try {
-    const response = await fetch("http://localhost:3000/api/reports/construction", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
+ const handleSubmit = async (data: ConstructionReportFormValues) => {
+    try {
+      const response = await API.post("/reports/accident", data);
 
-    const result = await response.json();
-
-    if (result.success) {
+      if (response.data.success) {
+        toast({
+          title: "Report Submitted ✅",
+          description: "Your construction report has been successfully submitted.",
+        });
+        form.reset();
+        onSubmit(data); // keep your original callback if needed
+      } else {
+        toast({
+          title: "Submission Failed ❌",
+          description: "Something went wrong. Try again later.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
       toast({
-        title: "Report Submitted ✅",
-        description: "Your accident report has been successfully sent.",
-      });
-      form.reset();
-    } else {
-      toast({
-        title: "Submission Failed ❌",
-        description: "Something went wrong. Try again later.",
+        title: "Server Error 😔",
+        description: "Unable to reach the server.",
         variant: "destructive",
       });
     }
-  } catch (error) {
-    toast({
-      title: "Server Error 😔",
-      description: "Unable to reach the server.",
-      variant: "destructive",
-    });
-  }
-};
+  };
 
 
 

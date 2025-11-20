@@ -93,7 +93,6 @@ const Index = () => {
         </div>
       </main>
 
-      <Footer />
     </div>
   );
 };

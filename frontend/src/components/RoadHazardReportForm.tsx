@@ -9,7 +9,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { MapPin, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
+import { useAuth } from "@clerk/clerk-react";
+import API, { setTokenGetter } from "@/utility/api";
 const roadHazardReportSchema = z.object({
   hazardType: z.string().min(1, "Please select the type of road hazard"),
   location: z.string().min(3, "Please enter a valid location"),
@@ -41,37 +42,32 @@ export const RoadHazardReportForm = ({ onSubmit, onCancel }: RoadHazardReportFor
 
   const { toast } = useToast();
 
-const handleSubmit = async (data: RoadHazardReportFormValues) => {
-  try {
-    const response = await fetch("http://localhost:3000/api/reports/hazard", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
+ const handleSubmit = async (data: RoadHazardReportFormValues) => {
+    try {
+      const response = await API.post("/reports/accident", data);
 
-    const result = await response.json();
-
-    if (result.success) {
+      if (response.data.success) {
+        toast({
+          title: "Report Submitted ✅",
+          description: "Your Road Hazard report has been successfully submitted.",
+        });
+        form.reset();
+        onSubmit(data); // keep your original callback if needed
+      } else {
+        toast({
+          title: "Submission Failed ❌",
+          description: "Something went wrong. Try again later.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
       toast({
-        title: "Report Submitted ✅",
-        description: "Your accident report has been successfully sent.",
-      });
-      form.reset();
-    } else {
-      toast({
-        title: "Submission Failed ❌",
-        description: "Something went wrong. Try again later.",
+        title: "Server Error 😔",
+        description: "Unable to reach the server.",
         variant: "destructive",
       });
     }
-  } catch (error) {
-    toast({
-      title: "Server Error 😔",
-      description: "Unable to reach the server.",
-      variant: "destructive",
-    });
-  }
-};
+  };
 
 
 
