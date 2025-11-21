@@ -4,20 +4,35 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { MapPin, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@clerk/clerk-react";
-import API, { setTokenGetter } from "@/utility/api";
+import React, { useState } from "react";
+import API from "@/utility/api";
+import { LocationPicker } from "@/components/LocationPicker";
+
+// ---------------------
+// Validation Schema
+// ---------------------
 const roadHazardReportSchema = z.object({
   hazardType: z.string().min(1, "Please select the type of road hazard"),
-  location: z.string().min(3, "Please enter a valid location"),
   description: z.string().min(5, "Please provide more details"),
-  severity: z.enum(["Low", "Medium", "High"], {
-    required_error: "Please select severity level",
-  }),
+  severity: z.enum(["low", "medium", "high"]),
   timeReported: z.string().min(1, "Please enter time of report"),
 });
 
@@ -33,7 +48,6 @@ export const RoadHazardReportForm = ({ onSubmit, onCancel }: RoadHazardReportFor
     resolver: zodResolver(roadHazardReportSchema),
     defaultValues: {
       hazardType: "",
-      location: "",
       description: "",
       severity: undefined,
       timeReported: "",
@@ -42,21 +56,48 @@ export const RoadHazardReportForm = ({ onSubmit, onCancel }: RoadHazardReportFor
 
   const { toast } = useToast();
 
- const handleSubmit = async (data: RoadHazardReportFormValues) => {
+  // 🌍 Geo State
+  const [lat, setLat] = useState<number | null>(null);
+  const [lng, setLng] = useState<number | null>(null);
+  const [address, setAddress] = useState("");
+
+  // ---------------------
+  // Submit Handler
+  // ---------------------
+  const handleSubmit = async (data: RoadHazardReportFormValues) => {
+    if (!lat || !lng || !address) {
+      toast({
+        title: "Location Required",
+        description: "Please pick a location on the map.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const payload = {
+      ...data,
+      location: address,
+      latitude: lat,
+      longitude: lng,
+    };
+
     try {
-      const response = await API.post("/reports/accident", data);
+      const response = await API.post("/reports/hazard", payload);
 
       if (response.data.success) {
         toast({
           title: "Report Submitted ✅",
-          description: "Your Road Hazard report has been successfully submitted.",
+          description: "Your road hazard report has been submitted.",
         });
         form.reset();
-        onSubmit(data); // keep your original callback if needed
+        onSubmit(data);
+        setLat(null);
+        setLng(null);
+        setAddress("");
       } else {
         toast({
           title: "Submission Failed ❌",
-          description: "Something went wrong. Try again later.",
+          description: "Try again later.",
           variant: "destructive",
         });
       }
@@ -69,8 +110,6 @@ export const RoadHazardReportForm = ({ onSubmit, onCancel }: RoadHazardReportFor
     }
   };
 
-
-
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader className="pb-4">
@@ -79,46 +118,53 @@ export const RoadHazardReportForm = ({ onSubmit, onCancel }: RoadHazardReportFor
           Report Road Hazard
         </CardTitle>
       </CardHeader>
+
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="location"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-1">
-                      <MapPin className="w-4 h-4" />
-                      Location
-                    </FormLabel>
-                    <FormControl>
-                      <Input placeholder="Street address or intersection" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+
+            {/* 🌍 LOCATION PICKER */}
+            <div className="space-y-2">
+              <FormLabel className="flex items-center gap-1">
+                <MapPin className="w-4 h-4" /> Select Hazard Location
+              </FormLabel>
+
+              <LocationPicker
+                onLocationSelect={(lat, lng, address) => {
+                  setLat(lat);
+                  setLng(lng);
+                  setAddress(address);
+                }}
               />
 
-              <FormField
-                control={form.control}
-                name="timeReported"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-1">
-                      <Clock className="w-4 h-4" />
-                      Time Reported
-                    </FormLabel>
-                    <FormControl>
-                      <Input type="datetime-local" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {address && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  📌 Selected: <b>{address}</b>
+                </p>
+              )}
             </div>
 
+            {/* TIME */}
+            <FormField
+              control={form.control}
+              name="timeReported"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-1">
+                    <Clock className="w-4 h-4" />
+                    Time Reported
+                  </FormLabel>
+                  <FormControl>
+                    <Input type="datetime-local" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* HAZARD TYPE + SEVERITY */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
               <FormField
                 control={form.control}
                 name="hazardType"
@@ -132,11 +178,11 @@ export const RoadHazardReportForm = ({ onSubmit, onCancel }: RoadHazardReportFor
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="Debris">Debris</SelectItem>
-                        <SelectItem value="Potholes">Potholes</SelectItem>
-                        <SelectItem value="Obstacles">Obstacles</SelectItem>
-                        <SelectItem value="Oil Spill">Oil Spill</SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
+                        <SelectItem value="debris">Debris</SelectItem>
+                        <SelectItem value="potholes">Potholes</SelectItem>
+                        <SelectItem value="obstacles">Obstacles</SelectItem>
+                        <SelectItem value="oil spill">Oil Spill</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -157,17 +203,19 @@ export const RoadHazardReportForm = ({ onSubmit, onCancel }: RoadHazardReportFor
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="Low">Low</SelectItem>
-                        <SelectItem value="Medium">Medium</SelectItem>
-                        <SelectItem value="High">High</SelectItem>
+                        <SelectItem value="low">Low</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="high">High</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
             </div>
 
+            {/* DESCRIPTION */}
             <FormField
               control={form.control}
               name="description"
@@ -176,7 +224,7 @@ export const RoadHazardReportForm = ({ onSubmit, onCancel }: RoadHazardReportFor
                   <FormLabel>Description</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Provide detailed description of the hazard, location, and any risks..."
+                      placeholder="Describe the road hazard..."
                       className="min-h-[120px]"
                       {...field}
                     />
@@ -186,6 +234,7 @@ export const RoadHazardReportForm = ({ onSubmit, onCancel }: RoadHazardReportFor
               )}
             />
 
+            {/* BUTTONS */}
             <div className="flex gap-3 pt-4">
               <Button type="submit" className="flex-1 gradient-primary">
                 Submit Report
@@ -194,6 +243,7 @@ export const RoadHazardReportForm = ({ onSubmit, onCancel }: RoadHazardReportFor
                 Cancel
               </Button>
             </div>
+
           </form>
         </Form>
       </CardContent>

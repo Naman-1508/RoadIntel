@@ -20,28 +20,21 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Construction, MapPin, Clock, Users } from "lucide-react";
+import { Construction, MapPin, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@clerk/clerk-react";
-import API, { setTokenGetter } from "@/utility/api"
-import { fromTheme } from "tailwind-merge";
+import API from "@/utility/api";
+import React, { useState } from "react";
+import { LocationPicker } from "@/components/LocationPicker";
 
+
+// ---------------------
+// Validation Schema
+// ---------------------
 const constructionReportSchema = z.object({
-  location: z
-    .string()
-    .min(1, "Location is required")
-    .max(200, "Location must be less than 200 characters"),
-  description: z
-    .string()
-    .min(10, "Description must be at least 10 characters")
-    .max(500, "Description must be less than 500 characters"),
-  constructionType: z.enum(["roadwork", "bridgework", "building", "utility"], {
-    required_error: "Please select construction typer",
-  }),
-  progressStatus: z.enum(["planned", "in progress", "completed", "delayed"], {
-    required_error: "Please select progress status",
-  }),
-  expectedCompletion: z.string().min(1, "Expected completion data is required"),
+  description: z.string().min(10, "Description must be at least 10 characters"),
+  constructionType: z.enum(["roadwork", "bridgework", "building", "utility"]),
+  progressStatus: z.enum(["planned", "in progress", "completed", "delayed"]),
+  expectedCompletion: z.string().min(1, "Expected completion date is required"),
   timeReported: z.string().min(1, "Time reported is required"),
 });
 
@@ -59,7 +52,6 @@ export const ConstructionReportForm = ({
   const form = useForm<ConstructionReportFormValues>({
     resolver: zodResolver(constructionReportSchema),
     defaultValues: {
-      location: "",
       description: "",
       constructionType: undefined,
       progressStatus: undefined,
@@ -68,23 +60,50 @@ export const ConstructionReportForm = ({
     },
   });
 
-const { toast } = useToast();
+  const { toast } = useToast();
 
- const handleSubmit = async (data: ConstructionReportFormValues) => {
+  // 🌍 Location State
+  const [lat, setLat] = useState<number | null>(null);
+  const [lng, setLng] = useState<number | null>(null);
+  const [address, setAddress] = useState("");
+
+  // ---------------------
+  // Submit Handler
+  // ---------------------
+  const handleSubmit = async (data: ConstructionReportFormValues) => {
+    if (!lat || !lng || !address) {
+      toast({
+        title: "Location Required",
+        description: "Please pick a location on the map.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const payload = {
+      ...data,
+      location: address,
+      latitude: lat,
+      longitude: lng,
+    };
+
     try {
-      const response = await API.post("/reports/accident", data);
+      const response = await API.post("/reports/construction", payload);
 
       if (response.data.success) {
         toast({
           title: "Report Submitted ✅",
-          description: "Your construction report has been successfully submitted.",
+          description: "Your construction report has been added.",
         });
         form.reset();
-        onSubmit(data); // keep your original callback if needed
+        setLat(null);
+        setLng(null);
+        setAddress("");
+        onSubmit(data);
       } else {
         toast({
           title: "Submission Failed ❌",
-          description: "Something went wrong. Try again later.",
+          description: "Try again later.",
           variant: "destructive",
         });
       }
@@ -97,8 +116,6 @@ const { toast } = useToast();
     }
   };
 
-
-
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader className="pb-4">
@@ -107,65 +124,61 @@ const { toast } = useToast();
           Report Construction
         </CardTitle>
       </CardHeader>
+
       <CardContent>
         <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-6"
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="location"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-1">
-                      <MapPin className="w-4 h-4" />
-                      Location
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Street address or intersection"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+
+            {/* 🌍 LOCATION PICKER */}
+            <div className="space-y-2">
+              <FormLabel className="flex items-center gap-1">
+                <MapPin className="w-4 h-4" /> Select Construction Location
+              </FormLabel>
+
+              <LocationPicker
+                onLocationSelect={(lat, lng, address) => {
+                  setLat(lat);
+                  setLng(lng);
+                  setAddress(address);
+                }}
               />
 
-              <FormField
-                control={form.control}
-                name="timeReported"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-1">
-                      <Clock className="w-4 h-4" />
-                      Time of Report
-                    </FormLabel>
-                    <FormControl>
-                      <Input type="datetime-local" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {address && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  📌 Selected: <b>{address}</b>
+                </p>
+              )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* TIME REPORTED */}
+            <FormField
+              control={form.control}
+              name="timeReported"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-1">
+                    <Clock className="w-4 h-4" /> Time Reported
+                  </FormLabel>
+                  <FormControl>
+                    <Input type="datetime-local" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* TYPE + STATUS */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="constructionType"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Cosntruction Type</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
+                    <FormLabel>Construction Type</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select construction type" />
+                          <SelectValue placeholder="Select type" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -179,33 +192,33 @@ const { toast } = useToast();
                   </FormItem>
                 )}
               />
-               <FormField
-              control={form.control}
-              name="progressStatus"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Progress Status</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="planned">Planned</SelectItem>
-                      <SelectItem value="in progress">In Progress</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="delayed">Delayed</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+
+              <FormField
+                control={form.control}
+                name="progressStatus"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Progress Status</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="planned">Planned</SelectItem>
+                        <SelectItem value="in progress">In Progress</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="delayed">Delayed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
+
+            {/* DESCRIPTION */}
             <FormField
               control={form.control}
               name="description"
@@ -213,19 +226,14 @@ const { toast } = useToast();
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea
-                      placeholder="Provide detailed description of the accident, road conditions, weather, and any other relevant information..."
-                      className="min-h-[120px]"
-                      {...field}
-                    />
+                    <Textarea className="min-h-[120px]" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-           
-
+            {/* COMPLETION DATE */}
             <FormField
               control={form.control}
               name="expectedCompletion"
@@ -240,6 +248,7 @@ const { toast } = useToast();
               )}
             />
 
+            {/* BUTTONS */}
             <div className="flex gap-3 pt-4">
               <Button type="submit" className="flex-1 gradient-primary">
                 Submit Report
@@ -248,6 +257,7 @@ const { toast } = useToast();
                 Cancel
               </Button>
             </div>
+
           </form>
         </Form>
       </CardContent>

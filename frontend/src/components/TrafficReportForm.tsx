@@ -4,24 +4,36 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Car, MapPin, Clock, Users } from "lucide-react";
+import { Car, MapPin, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@clerk/clerk-react";
-import API, { setTokenGetter } from "@/utility/api";
+import React, { useState } from "react";
+import API from "@/utility/api";
+import { LocationPicker } from "@/components/LocationPicker";
 
+// ---------------------
+// Validation Schema
+// ---------------------
 const trafficReportSchema = z.object({
-  location: z.string().min(1, "Location is required").max(200, "Location must be less than 200 characters"),
-  description: z.string().min(10, "Description must be at least 10 characters").max(500, "Description must be less than 500 characters"),
-  trafficlevel: z.enum(["light", "moderate", "heavy"], {
-    required_error: "Please select traffic level",
-  }),
-  cause: z.enum(["accident","construction","rush hour","weather"],{
-    required_error: "Please select cause of delay",
-  }),
-  estimateDelay: z.string().min(1,"Estimated Delay is required"),
+  description: z.string().min(10, "Description must be at least 10 characters"),
+  trafficlevel: z.enum(["light", "moderate", "heavy"]),
+  cause: z.enum(["accident", "construction", "rush hour", "weather"]),
+  estimateDelay: z.string().min(1, "Estimated Delay is required"),
   timeReported: z.string().min(1, "Time is required"),
 });
 
@@ -36,28 +48,61 @@ export const TrafficReportForm = ({ onSubmit, onCancel }: TrafficReportFormProps
   const form = useForm<TrafficReportFormValues>({
     resolver: zodResolver(trafficReportSchema),
     defaultValues: {
-      location: "",
       description: "",
       trafficlevel: undefined,
       cause: undefined,
-      estimateDelay:"",
+      estimateDelay: "",
       timeReported: "",
     },
   });
 
   const { toast } = useToast();
 
-const handleSubmit = async (data: TrafficReportFormValues) => {
+  // 🌍 GEO STATE
+  const [lat, setLat] = useState<number | null>(null);
+  const [lng, setLng] = useState<number | null>(null);
+  const [address, setAddress] = useState("");
+
+  // ---------------------
+  // Submit Handler
+  // ---------------------
+  const handleSubmit = async (data: TrafficReportFormValues) => {
+    if (!lat || !lng || !address) {
+      toast({
+        title: "Location Required",
+        description: "Please pick a location on the map.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const payload = {
+      ...data,
+      location: address,
+      latitude: lat,
+      longitude: lng,
+
+      // backend expects congestionLevel instead of trafficlevel
+      congestionLevel: data.trafficlevel,
+    };
+
+    delete payload["trafficlevel"]; // remove old field
+
     try {
-      const response = await API.post("/reports/accident", data);
+      const response = await API.post("/reports/traffic", payload);
 
       if (response.data.success) {
         toast({
           title: "Report Submitted ✅",
-          description: "Your Traffic report has been successfully submitted.",
+          description: "Your traffic report has been successfully submitted.",
         });
+
         form.reset();
-        onSubmit(data); // keep your original callback if needed
+        setLat(null);
+        setLng(null);
+        setAddress("");
+
+        onSubmit(data);
       } else {
         toast({
           title: "Submission Failed ❌",
@@ -74,9 +119,6 @@ const handleSubmit = async (data: TrafficReportFormValues) => {
     }
   };
 
-
-
-
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader className="pb-4">
@@ -85,46 +127,53 @@ const handleSubmit = async (data: TrafficReportFormValues) => {
           Report Traffic
         </CardTitle>
       </CardHeader>
+
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="location"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-1">
-                      <MapPin className="w-4 h-4" />
-                      Location
-                    </FormLabel>
-                    <FormControl>
-                      <Input placeholder="Street address or intersection" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+
+            {/* 🌍 LOCATION PICKER */}
+            <div className="space-y-2">
+              <FormLabel className="flex items-center gap-1">
+                <MapPin className="w-4 h-4" /> Select Traffic Location
+              </FormLabel>
+
+              <LocationPicker
+                onLocationSelect={(lat, lng, address) => {
+                  setLat(lat);
+                  setLng(lng);
+                  setAddress(address);
+                }}
               />
 
-              <FormField
-                control={form.control}
-                name="timeReported"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-1">
-                      <Clock className="w-4 h-4" />
-                      Time of Traffic
-                    </FormLabel>
-                    <FormControl>
-                      <Input type="datetime-local" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {address && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  📌 Selected: <b>{address}</b>
+                </p>
+              )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* TIME REPORTED */}
+            <FormField
+              control={form.control}
+              name="timeReported"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-1">
+                    <Clock className="w-4 h-4" />
+                    Time Reported
+                  </FormLabel>
+                  <FormControl>
+                    <Input type="datetime-local" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* TRAFFIC LEVEL + CAUSE */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
               <FormField
                 control={form.control}
                 name="trafficlevel"
@@ -147,6 +196,7 @@ const handleSubmit = async (data: TrafficReportFormValues) => {
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="cause"
@@ -170,22 +220,25 @@ const handleSubmit = async (data: TrafficReportFormValues) => {
                   </FormItem>
                 )}
               />
-            </div>
-            
-            <FormField
-                control={form.control}
-                name="estimateDelay"
-                render={({field})=>(
-                    <FormItem>
-                        <FormLabel>Estimated Delay (minutes)</FormLabel>
-                        <FormControl>
-                            <Input type="number" min="0" placeholder="e.g., 15" {...field}/>
-                        </FormControl>
-                        <FormMessage/>
-                    </FormItem>
-                )}
 
+            </div>
+
+            {/* ESTIMATED DELAY */}
+            <FormField
+              control={form.control}
+              name="estimateDelay"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Estimated Delay (minutes)</FormLabel>
+                  <FormControl>
+                    <Input type="number" min="0" placeholder="e.g., 15" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
+
+            {/* DESCRIPTION */}
             <FormField
               control={form.control}
               name="description"
@@ -193,17 +246,14 @@ const handleSubmit = async (data: TrafficReportFormValues) => {
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea
-                      placeholder="Provide detailed description of the accident, road conditions, weather, and any other relevant information..."
-                      className="min-h-[120px]"
-                      {...field}
-                    />
+                    <Textarea className="min-h-[120px]" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
+            {/* BUTTONS */}
             <div className="flex gap-3 pt-4">
               <Button type="submit" className="flex-1 gradient-primary">
                 Submit Report
@@ -212,6 +262,7 @@ const handleSubmit = async (data: TrafficReportFormValues) => {
                 Cancel
               </Button>
             </div>
+
           </form>
         </Form>
       </CardContent>

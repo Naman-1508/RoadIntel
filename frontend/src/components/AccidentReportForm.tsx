@@ -7,32 +7,29 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { AlertTriangle, MapPin, Clock, Users } from "lucide-react";
+import { AlertTriangle, Clock, Users, MapPin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 import { useAuth } from "@clerk/clerk-react";
 import API, { setTokenGetter } from "@/utility/api";
+import React, { useState } from "react";
+import { LocationPicker } from "@/components/LocationPicker";
 
 // ---------------------
 // Validation Schema
 // ---------------------
 const accidentReportSchema = z.object({
-  location: z.string().min(1, "Location is required").max(200, "Location must be less than 200 characters"),
-  description: z.string().min(10, "Description must be at least 10 characters").max(500, "Description must be less than 500 characters"),
-  severity: z.enum(["low", "medium", "high"], {
-    required_error: "Please select severity level",
-  }),
-  vehiclesInvolved: z.string().min(1, "Number of vehicles is required"),
-  injuries: z.enum(["none", "minor", "serious"], {
-    required_error: "Please specify injury status",
-  }),
+  description: z.string().min(10, "Description is required"),
+  severity: z.enum(["low", "medium", "high"]),
+  vehiclesInvolved: z.string(),
+  injuries: z.enum(["none", "minor", "serious"]),
   timeOfAccident: z.string().min(1, "Time is required"),
 });
 
 type AccidentReportFormValues = z.infer<typeof accidentReportSchema>;
 
 interface AccidentReportFormProps {
-  onSubmit: (data: AccidentReportFormValues) => void; 
+  onSubmit: (data: AccidentReportFormValues) => void;
   onCancel: () => void;
 }
 
@@ -40,7 +37,6 @@ export const AccidentReportForm = ({ onSubmit, onCancel }: AccidentReportFormPro
   const form = useForm<AccidentReportFormValues>({
     resolver: zodResolver(accidentReportSchema),
     defaultValues: {
-      location: "",
       description: "",
       severity: undefined,
       vehiclesInvolved: "",
@@ -52,15 +48,36 @@ export const AccidentReportForm = ({ onSubmit, onCancel }: AccidentReportFormPro
   const { toast } = useToast();
   const { getToken } = useAuth();
 
-  // Connect Clerk token to Axios interceptor
+  // 🟢 Connect Clerk token
   setTokenGetter(() => getToken());
+
+  // 🟢 STATE FOR GEO + ADDRESS
+  const [lat, setLat] = useState<number | null>(null);
+  const [lng, setLng] = useState<number | null>(null);
+  const [address, setAddress] = useState("");
 
   // ---------------------
   // FIXED Submit Handler
   // ---------------------
   const handleSubmit = async (data: AccidentReportFormValues) => {
+    if (!lat || !lng || !address) {
+      toast({
+        title: "Location Required",
+        description: "Please pick a location on the map.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const payload = {
+      ...data,
+      location: address,
+      latitude: lat,
+      longitude: lng,
+    };
+
     try {
-      const response = await API.post("/reports/accident", data);
+      const response = await API.post("/reports/accident", payload);
 
       if (response.data.success) {
         toast({
@@ -68,7 +85,10 @@ export const AccidentReportForm = ({ onSubmit, onCancel }: AccidentReportFormPro
           description: "Your accident report has been successfully submitted.",
         });
         form.reset();
-        onSubmit(data); // keep your original callback if needed
+        setLat(null);
+        setLng(null);
+        setAddress("");
+        onSubmit(data);
       } else {
         toast({
           title: "Submission Failed ❌",
@@ -93,29 +113,35 @@ export const AccidentReportForm = ({ onSubmit, onCancel }: AccidentReportFormPro
           Report Accident
         </CardTitle>
       </CardHeader>
+
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-            
-            {/* ROW 1 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="location"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-1">
-                      <MapPin className="w-4 h-4" />
-                      Location
-                    </FormLabel>
-                    <FormControl>
-                      <Input placeholder="Street address or intersection" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+
+            {/* 🌍 LOCATION PICKER */}
+            <div className="space-y-2">
+              <FormLabel className="flex items-center gap-1">
+                <MapPin className="w-4 h-4" />
+                Select Accident Location
+              </FormLabel>
+
+              <LocationPicker
+                onLocationSelect={(lat, lng, address) => {
+                  setLat(lat);
+                  setLng(lng);
+                  setAddress(address);
+                }}
               />
 
+              {address && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  📌 Selected Location: <b>{address}</b>
+                </p>
+              )}
+            </div>
+
+            {/* TIME + OTHER FIELDS */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="timeOfAccident"
@@ -134,14 +160,14 @@ export const AccidentReportForm = ({ onSubmit, onCancel }: AccidentReportFormPro
               />
             </div>
 
-            {/* ROW 2 */}
+            {/* SEVERITY */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <FormField
                 control={form.control}
                 name="severity"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Severity Level</FormLabel>
+                    <FormLabel>Severity</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
@@ -149,9 +175,9 @@ export const AccidentReportForm = ({ onSubmit, onCancel }: AccidentReportFormPro
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="low">Low - Minor damage</SelectItem>
-                        <SelectItem value="medium">Medium - Moderate damage</SelectItem>
-                        <SelectItem value="high">High - Severe damage</SelectItem>
+                        <SelectItem value="low">Low</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="high">High</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -164,12 +190,12 @@ export const AccidentReportForm = ({ onSubmit, onCancel }: AccidentReportFormPro
                 name="vehiclesInvolved"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center gap-1">
-                      <Users className="w-4 h-4" />
-                      Vehicles Involved
+                    <FormLabel>
+                      <Users className="w-4 h-4 inline-block mr-1" />
+                      Vehicles
                     </FormLabel>
                     <FormControl>
-                      <Input type="number" min="1" max="10" placeholder="Number" {...field} />
+                      <Input type="number" min="1" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -189,9 +215,9 @@ export const AccidentReportForm = ({ onSubmit, onCancel }: AccidentReportFormPro
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="none">No injuries</SelectItem>
-                        <SelectItem value="minor">Minor injuries</SelectItem>
-                        <SelectItem value="serious">Serious injuries</SelectItem>
+                        <SelectItem value="none">None</SelectItem>
+                        <SelectItem value="minor">Minor</SelectItem>
+                        <SelectItem value="serious">Serious</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -208,11 +234,7 @@ export const AccidentReportForm = ({ onSubmit, onCancel }: AccidentReportFormPro
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea
-                      placeholder="Provide detailed description of the accident, road conditions, weather, etc..."
-                      className="min-h-[120px]"
-                      {...field}
-                    />
+                    <Textarea className="min-h-[120px]" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
