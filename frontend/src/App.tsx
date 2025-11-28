@@ -15,6 +15,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import UserDashboard from "./pages/UserDashboard";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import Profile from "./pages/Profile";
+import VideoAnalysis from "./pages/VideoAnalysis";
 import { setTokenGetter } from "./utility/api";
 import { Footer } from "@/components/Footer";
 
@@ -64,6 +65,7 @@ const AppContent = () => (
             <Route path="/alerts" element={<ProtectedRoute><AlertDashboard /></ProtectedRoute>} />
             <Route path="/analytics" element={<ProtectedRoute><AnalyticsDashboard /></ProtectedRoute>} />
             <Route path="/social-insights" element={<ProtectedRoute><SocialInsights /></ProtectedRoute>} />
+            <Route path="/video-analysis" element={<ProtectedRoute><VideoAnalysis /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             
             {/* Admin routes */}

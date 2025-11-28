@@ -18,8 +18,8 @@ export async function fetchTweets() {
   if (cachedTweets.length && now - lastFetchTime < FETCH_INTERVAL) {
     return cachedTweets;
   }
-  if(isFetching){
-    return cachedTweets.length? cachedTweets : [];
+  if (isFetching) {
+    return cachedTweets.length ? cachedTweets : [];
   }
   isFetching = true;
 
@@ -48,7 +48,7 @@ export async function fetchTweets() {
     lastFetchTime = now;
     return cachedTweets;
 
-  } catch(err) {
+  } catch (err) {
     console.error("Twitter/X fetch failed:", err.response?.data || err.message);
 
     // fallback mock data
@@ -66,7 +66,7 @@ export async function fetchTweets() {
         timestamp: new Date().toISOString(),
       },
     ];
-  } finally{
+  } finally {
     isFetching = false;
   }
 }
@@ -84,7 +84,7 @@ export async function analyzeSeverity(text) {
   let attempt = 0;
   while (attempt < MAX_RETRIES) {
     try {
-      const model = genAi.getGenerativeModel({ model: "gemini-2.5-flash" });
+      const model = genAi.getGenerativeModel({ model: "gemini-1.5-flash" });
 
       const prompt = `
         Analyze the following social media post and classify the traffic severity as one of:

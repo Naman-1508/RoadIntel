@@ -1,4 +1,4 @@
-import { User, BarChart3, Bell, MessageSquare, Home } from "lucide-react";
+import { User, BarChart3, Bell, MessageSquare, Home, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -12,6 +12,7 @@ export const Navigation = ({ open, onOpenChange }: { open: boolean; onOpenChange
     { icon: BarChart3, label: "Analytics Dashboard", path: "/analytics" },
     { icon: Bell, label: "Alert Dashboard", path: "/alerts" },
     { icon: MessageSquare, label: "Social Insights", path: "/social-insights" },
+    { icon: Video, label: "Video Analysis", path: "/video-analysis" },
     { icon: User, label: "Profile", path: "/profile" },
   ];
 

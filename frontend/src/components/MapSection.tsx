@@ -1,52 +1,48 @@
-import { MapPin, AlertTriangle, Car, Construction } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import dashboardHero from "@/assets/dashboard-hero.jpg";
+import { LeafletMap } from "@/components/LeafletMap";
+import { useEffect, useState } from "react";
+import API from "@/utility/api";
+
+interface Incident {
+  id: string;
+  type: string;
+  severity: "high" | "medium" | "low";
+  lat: number;
+  lng: number;
+  title: string;
+}
 
 export const MapSection = () => {
-  const incidents = [
-    { id: 1, type: "accident", severity: "high", lat: 40.7589, lng: -73.9851, title: "Multi-car accident" },
-    { id: 2, type: "construction", severity: "medium", lat: 40.7505, lng: -73.9934, title: "Road work" },
-    { id: 3, type: "traffic", severity: "low", lat: 40.7614, lng: -73.9776, title: "Heavy traffic" },
-  ];
+  const [incidents, setIncidents] = useState<Incident[]>([]);
 
-  const getIncidentIcon = (type: string) => {
-    switch (type) {
-      case "accident":
-        return <AlertTriangle className="w-4 h-4" />;
-      case "construction":
-        return <Construction className="w-4 h-4" />;
-      case "traffic":
-        return <Car className="w-4 h-4" />;
-      default:
-        return <MapPin className="w-4 h-4" />;
-    }
-  };
+  useEffect(() => {
+    const fetchIncidents = async () => {
+      try {
+        const response = await API.get("/reports");
+        const mappedIncidents = response.data
+          .filter((report: any) => report.latitude != null && report.longitude != null)
+          .map((report: any) => ({
+            id: report._id,
+            type: report.type || "accident",
+            severity: report.severity || "medium",
+            lat: report.latitude,
+            lng: report.longitude,
+            title: report.description || `${report.type} Report`,
+          }));
+        setIncidents(mappedIncidents);
+      } catch (error) {
+        console.error("Failed to fetch incidents for map:", error);
+      }
+    };
 
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case "high":
-        return "text-danger bg-danger/10 border-danger/30";
-      case "medium":
-        return "text-warning-foreground bg-warning/10 border-warning/30";
-      case "low":
-        return "text-success bg-success/10 border-success/30";
-      default:
-        return "text-muted-foreground bg-muted border-border";
-    }
-  };
+    fetchIncidents();
+  }, []);
 
   return (
     <Card className="h-96 relative overflow-hidden shadow-custom-md interactive-card">
-      {/* Map Background */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${dashboardHero})` }}
-      >
-        <div className="absolute inset-0 bg-primary/10"></div>
-      </div>
-
-      {/* Map Controls */}
-      <div className="absolute top-4 left-4 z-10">
+      <LeafletMap incidents={incidents} />
+      
+      <div className="absolute top-4 left-14 z-[1000]">
         <Card className="p-3 bg-card/95 backdrop-blur-sm shadow-custom-md">
           <h3 className="font-semibold text-card-foreground mb-2">Traffic Map</h3>
           <div className="flex items-center space-x-2 text-sm">
@@ -66,29 +62,10 @@ export const MapSection = () => {
         </Card>
       </div>
 
-      {/* Incident Markers */}
-      <div className="absolute inset-0 z-10">
-        {incidents.map((incident) => (
-          <div
-            key={incident.id}
-            className={`absolute transform -translate-x-1/2 -translate-y-1/2 ${getSeverityColor(
-              incident.severity
-            )} border rounded-full p-2 shadow-custom-md cursor-pointer hover:scale-110 transition-transform`}
-            style={{
-              left: `${30 + incident.id * 15}%`,
-              top: `${40 + incident.id * 10}%`,
-            }}
-          >
-            {getIncidentIcon(incident.type)}
-          </div>
-        ))}
-      </div>
-
-      {/* Stats Overlay */}
-      <div className="absolute bottom-4 right-4 z-10">
+      <div className="absolute bottom-4 right-4 z-[1000]">
         <Card className="p-3 bg-card/95 backdrop-blur-sm shadow-custom-md">
           <div className="text-right">
-            <div className="text-2xl font-bold text-card-foreground">24</div>
+            <div className="text-2xl font-bold text-card-foreground">{incidents.length}</div>
             <div className="text-sm text-muted-foreground">Active incidents</div>
           </div>
         </Card>

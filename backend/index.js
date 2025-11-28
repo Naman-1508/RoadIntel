@@ -1,5 +1,4 @@
-import dotenv from "dotenv";
-dotenv.config();
+import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
@@ -14,6 +13,7 @@ import translateRoutes from "./routes/translateRoutes.js";
 import socialInsightsRoutes from "./routes/socialInsightsRoutes.js";
 import reportRoutes from "./routes/reportsRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
+import { videoRoutes } from "./routes/video.routes.js";
 
 // Load environment variables first
 
@@ -36,8 +36,8 @@ const port = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors({
-  origin: "http://localhost:8080",
-  credentials: true,
+    origin: "http://localhost:8080",
+    credentials: true,
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -47,11 +47,11 @@ mongoose.connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true
 })
-.then(() => console.log("✅ MongoDB connected successfully"))
-.catch(err => {
-    console.error("❌ MongoDB connection error:", err);
-    process.exit(1);
-});
+    .then(() => console.log("✅ MongoDB connected successfully"))
+    .catch(err => {
+        console.error("❌ MongoDB connection error:", err);
+        process.exit(1);
+    });
 
 // API Routes
 app.use("/api/auth", authRoutes);
@@ -60,6 +60,7 @@ app.use("/api/translate", translateRoutes);
 app.use("/api/social-insights", socialInsightsRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/video", videoRoutes);
 
 // Health check route
 app.get("/", (req, res) => {

@@ -1,4 +1,4 @@
-import { Search, Menu, Bell, User } from "lucide-react";
+import { Search, Menu, Bell, User, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
@@ -7,6 +7,7 @@ import { useState } from "react";
 import { translateText } from "@/services/translateServices";
 import { Navigation } from "@/components/Navigation";
 import { UserButton, SignInButton, useAuth } from "@clerk/clerk-react";
+
 export const Header : React.FC = () => {
   const { isSignedIn } = useAuth();
   const [langOpen, setLangOpen] = useState(false);
@@ -21,6 +22,7 @@ export const Header : React.FC = () => {
     analytics: "Analytics",
     alerts: "Alerts",
     social: "Social Insights",
+    video: "Video Analysis",
   })
 
   const languages = ["EN","HI","GU","KN","MR"];
@@ -41,18 +43,19 @@ export const Header : React.FC = () => {
     const translateHeader = await translateText("RoadIntel",targetLang);
     setHeaderTitle(translateHeader);
     const translatedNav = await Promise.all(
-  ["Dashboard","Reports","Analytics","Alerts","Social Insights"].map(label =>
-    translateText(label, targetLang)
-  )
-);
+      ["Dashboard","Reports","Analytics","Alerts","Social Insights", "Video Analysis"].map(label =>
+        translateText(label, targetLang)
+      )
+    );
 
-setNavLabels({
-  dashboard: translatedNav[0],
-  reports: translatedNav[1],
-  analytics: translatedNav[2],
-  alerts: translatedNav[3],
-  social: translatedNav[4],
-});
+    setNavLabels({
+      dashboard: translatedNav[0],
+      reports: translatedNav[1],
+      analytics: translatedNav[2],
+      alerts: translatedNav[3],
+      social: translatedNav[4],
+      video: translatedNav[5],
+    });
 
   }
 
@@ -66,7 +69,7 @@ setNavLabels({
           <Button
           variant="ghost"
           size="sm"
-          className="p-2"
+          className="p-2 md:hidden"
           onClick={()=> setNavOpen(true)
           }
           >
@@ -108,6 +111,9 @@ setNavLabels({
   </Link>
   <Link to="/social-insights" className="text-muted-foreground hover:text-primary transition-colors font-medium">
     {navLabels.social}
+  </Link>
+  <Link to="/video-analysis" className="text-muted-foreground hover:text-primary transition-colors font-medium">
+    {navLabels.video}
   </Link>
 </nav>
 
