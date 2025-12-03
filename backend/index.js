@@ -36,7 +36,7 @@ const port = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors({
-    origin: "http://localhost:8080",
+    origin: ["http://localhost:8080", "https://road-intel-frontend.vercel.app"],
     credentials: true,
 }));
 app.use(express.json());
