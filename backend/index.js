@@ -41,6 +41,7 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+// Backend API server - production ready
 
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI, {
