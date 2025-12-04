@@ -1,0 +1,13 @@
+{
+  "buildCommand": "cd backend && npm install && npm run build",
+  "installCommand": "npm install",
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "regions": ["iad1"],
+  "functions": {
+    "backend/index.js": {
+      "runtime": "nodejs24.x"
+    }
+  }
+}
